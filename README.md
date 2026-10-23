@@ -256,6 +256,48 @@ Open your browser and navigate to:
 
 ---
 
+---
+
+### 7. Production Deployment (Docker & WSGI)
+
+For production environments, run the application using Docker or Gunicorn:
+
+#### Option A: Docker Container (Recommended for Cloud/AWS)
+```bash
+# Build the Docker image
+docker build -t medical-chatbot:latest .
+
+# Run the container (pass your API keys or load .env)
+docker run -d -p 8080:8080 --env-file .env --name medchat medical-chatbot:latest
+
+# Health check
+curl http://localhost:8080/health
+```
+
+#### Option B: Gunicorn WSGI Server (Linux/macOS)
+```bash
+gunicorn app:app --bind 0.0.0.0:8080 --workers 2 --timeout 120
+```
+
+#### Option C: Waitress WSGI Server (Windows Production)
+```bash
+waitress-serve --port=8080 app:app
+```
+
+---
+
+## ⌨️ Keyboard Shortcuts & Features
+
+| Shortcut | Action |
+| :--- | :--- |
+| `Ctrl + B` (or `Cmd + B`) | Toggle / Collapse Sidebar |
+| `Ctrl + K` (or `Cmd + K`) | Start New Chat session |
+| `Enter` | Send message |
+| `Shift + Enter` | Multiline / newline in input |
+| `Esc` | Close mobile sidebar drawer |
+
+---
+
 ## 💬 Sample Questions to Ask
 
 - *"What is hypertension and how does it affect the heart?"*
@@ -271,24 +313,33 @@ Open your browser and navigate to:
 1. **Resolved Model Deprecation (`404 NOT_FOUND`)**:
    - The original code pointed to `gemini-2.0-flash` which is discontinued. Upgraded to `gemini-3.5-flash`, which is active, fast, and fully supported.
 
-2. **Fixed LangChain Chain Import Incompatibilities**:
+2. **Fixed Duplicate Hamburger Icon & Desktop Sidebar Collapse**:
+   - Resolved the duplicate hamburger icon issue (`≡ ≡`) by hiding the navbar toggle button when the sidebar is open on desktop.
+   - Implemented smooth desktop collapse animation (`Ctrl+B`) and offcanvas drawer with backdrop for mobile screens.
+
+3. **Production Backend Architecture**:
+   - Replaced raw print statements with standard Python `logging`.
+   - Added container health check endpoint `/health` returning service status, Pinecone index, and LLM model info.
+   - Added HTTP error handlers (`400`, `404`, `500`) and safe input validation.
+   - Added `Dockerfile`, `.dockerignore`, and `Procfile` for container and cloud deployments.
+
+4. **Fixed LangChain Chain Import Incompatibilities**:
    - Implemented a flexible import fallback between `langchain.chains` and `langchain_classic.chains`, ensuring stability across modern LangChain versions (0.3+ / 1.x).
 
-3. **Safe Environment Variable Handling**:
+5. **Safe Environment Variable Handling**:
    - Added explicit validation for `PINECONE_API_KEY` and `GOOGLE_API_KEY` with clear, informative error messages instead of unhandled runtime crashes.
 
-4. **Multi-Format Response Extraction**:
+6. **Multi-Format Response Extraction**:
    - Updated answer extraction logic in `app.py` to seamlessly handle string, `TextAccessor`, and structured list tokens returned by modern LLM interfaces without exposing raw Python dictionaries or signatures.
 
-5. **Batch Uploading in `store_index.py`**:
+7. **Batch Uploading in `store_index.py`**:
    - Updated vector uploading to process in batches of 100 chunks, preventing payload limits (413) and network timeout issues with large books.
    - Replaced fixed sleep times with dynamic readiness polling (`pc.describe_index`).
 
-6. **Enhanced Frontend UI with Markdown Parsing**:
-   - Added `Marked.js` to render formatted lists, bold text, and paragraphs inside bot chat bubbles rather than displaying raw markdown asterisks.
-
-7. **Configured `.env.example` and Git Safety**:
-   - Provided `.env.example` to guide new developers while ensuring sensitive keys remain protected in `.gitignore`.
+8. **Enhanced ChatGPT UI with Markdown & Speech**:
+   - Top `+ New chat` button with local storage multi-chat persistence.
+   - Markdown parsing with `Marked.js`, voice dictation (Web Speech API), and text-to-speech audio playback.
+   - Glowing clinical AI logo and tailored dark/light aesthetic.
 
 ---
 

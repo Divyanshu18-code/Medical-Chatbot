@@ -111,7 +111,8 @@
 
         /* ===== CHATGPT-STYLE SIDEBAR ===== */
         .sidebar {
-            width: 290px;
+            width: 280px;
+            min-width: 280px;
             background: var(--bg-sidebar);
             border-right: 1px solid var(--border-subtle);
             display: flex;
@@ -119,8 +120,14 @@
             padding: 16px 14px;
             gap: 14px;
             flex-shrink: 0;
-            transition: var(--transition);
+            transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), 
+                        min-width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                        padding 0.28s cubic-bezier(0.4, 0, 0.2, 1), 
+                        opacity 0.2s ease, 
+                        transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
+            overflow: hidden;
+            white-space: nowrap;
         }
 
         /* Sidebar Header & Brand */
@@ -947,22 +954,75 @@
             gap: 6px;
         }
 
-        /* ===== RESPONSIVE ===== */
+        /* ===== DESKTOP COLLAPSE & MOBILE DRAWER ===== */
+        @media (min-width: 861px) {
+            /* When sidebar is OPEN on desktop, HIDE navbar toggle button to prevent duplicate hamburger buttons */
+            .chat-app:not(.sidebar-collapsed) .nav-toggle-btn {
+                display: none;
+            }
+
+            /* When sidebar is COLLAPSED on desktop */
+            .chat-app.sidebar-collapsed .sidebar {
+                width: 0 !important;
+                min-width: 0 !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                border-right: none !important;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .chat-app.sidebar-collapsed .nav-toggle-btn {
+                display: flex !important;
+            }
+        }
+
+        /* Mobile Responsive */
         @media (max-width: 860px) {
             .sidebar {
                 position: fixed;
-                left: -290px;
+                left: -300px;
                 top: 0;
                 bottom: 0;
+                width: 280px !important;
+                min-width: 280px !important;
+                z-index: 1000;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                box-shadow: none;
             }
 
             .sidebar.open {
-                left: 0;
+                left: 0 !important;
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.85);
+            }
+
+            .nav-toggle-btn {
+                display: flex !important;
             }
 
             .prompt-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Backdrop overlay for mobile drawer */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+        }
+
+        .sidebar-backdrop.visible {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -976,8 +1036,8 @@
                     <img src="/static/images/logo.png" alt="MedChat AI Logo" class="brand-logo-img" />
                     <span class="brand-title">MedChat AI</span>
                 </div>
-                <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Close Sidebar">
-                    <i class="fa-solid fa-bars"></i>
+                <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar (Ctrl+B)">
+                    <i class="fa-solid fa-angles-left"></i>
                 </button>
             </div>
 
@@ -1014,12 +1074,15 @@
             </div>
         </aside>
 
+        <!-- Mobile Drawer Backdrop -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
         <!-- MAIN CHAT PANEL -->
         <main class="main-chat">
             <!-- Navbar -->
             <header class="chat-navbar">
                 <div class="navbar-left">
-                    <button class="nav-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+                    <button class="nav-toggle-btn" onclick="toggleSidebar()" title="Open sidebar (Ctrl+B)">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="nav-title-group">
@@ -1192,7 +1255,7 @@
                 item.onclick = (e) => {
                     if (!e.target.closest(".history-item-delete")) {
                         switchChat(chat.id);
-                        if (window.innerWidth <= 860) sidebar.classList.remove("open");
+                        closeMobileSidebar();
                     }
                 };
 
@@ -1554,6 +1617,54 @@
             micBtn.classList.remove("recording");
             userInput.placeholder = "Message MedChat AI about any symptom or health condition...";
         }
+
+        // Sidebar Toggle (Desktop Collapse & Mobile Offcanvas Drawer)
+        function toggleSidebar() {
+            const isMobile = window.innerWidth <= 860;
+            const app = document.querySelector(".chat-app");
+            const backdrop = document.getElementById("sidebar-backdrop");
+
+            if (isMobile) {
+                const isOpen = sidebar.classList.toggle("open");
+                if (backdrop) backdrop.classList.toggle("visible", isOpen);
+            } else {
+                const isCollapsed = app.classList.toggle("sidebar-collapsed");
+                try {
+                    localStorage.setItem("medchat_sidebar_collapsed", isCollapsed ? "1" : "0");
+                } catch(e) {}
+            }
+        }
+
+        // Close sidebar helper (used when switching chats or clicking backdrop on mobile)
+        function closeMobileSidebar() {
+            if (window.innerWidth <= 860) {
+                sidebar.classList.remove("open");
+                const backdrop = document.getElementById("sidebar-backdrop");
+                if (backdrop) backdrop.classList.remove("visible");
+            }
+        }
+
+        // Global Keyboard Shortcuts (Ctrl+B / Ctrl+K / Escape)
+        document.addEventListener("keydown", function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+                e.preventDefault();
+                toggleSidebar();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                startNewChat();
+            }
+            if (e.key === "Escape" && window.innerWidth <= 860 && sidebar.classList.contains("open")) {
+                closeMobileSidebar();
+            }
+        });
+
+        // Restore desktop sidebar collapsed state from localStorage
+        try {
+            if (window.innerWidth > 860 && localStorage.getItem("medchat_sidebar_collapsed") === "1") {
+                document.querySelector(".chat-app").classList.add("sidebar-collapsed");
+            }
+        } catch(e) {}
 
         // Start App
         initApp();
