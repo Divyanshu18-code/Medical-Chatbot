@@ -3,754 +3,1338 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MedChat AI — Your Medical Assistant</title>
-    <meta name="description" content="AI-powered medical chatbot that answers health questions using trusted medical textbook knowledge." />
+    <title>MedChat AI — Clinical Medical Assistant</title>
+    <meta name="description" content="State-of-the-art AI-powered clinical medical assistant powered by Google Gemini and verified Gale Encyclopedia of Medicine knowledge base." />
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-    <!-- Font Awesome Icons -->
+    <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <!-- Marked.js for Markdown Rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
-        /* ===== CSS RESET & VARIABLES ===== */
+        /* ===== MODERN CLINICAL DESIGN TOKENS ===== */
+        :root {
+            --bg-base: #060913;
+            --bg-sidebar: #0b1120;
+            --bg-surface: #0f172a;
+            --bg-card: #141e33;
+            --bg-card-hover: #1a2742;
+            --border-subtle: rgba(148, 163, 184, 0.12);
+            --border-accent: rgba(56, 189, 248, 0.3);
+            
+            --cyan-500: #06b6d4;
+            --cyan-400: #22d3ee;
+            --teal-500: #14b8a6;
+            --teal-400: #2dd4bf;
+            --blue-500: #3b82f6;
+            --indigo-500: #6366f1;
+            --emerald-500: #10b981;
+            --amber-500: #f59e0b;
+            --rose-500: #f43f5e;
+
+            --text-heading: #f8fafc;
+            --text-body: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-faint: #64748b;
+
+            --user-bubble: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            --bot-bubble: rgba(15, 23, 42, 0.85);
+            --medical-gradient: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.25);
+            --shadow-glow: 0 0 35px rgba(6, 182, 212, 0.15);
+        }
+
         *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #111827;
-            --bg-card: #1a1f35;
-            --bg-glass: rgba(26, 31, 53, 0.6);
-            --border-glass: rgba(99, 179, 237, 0.15);
-            --accent-primary: #38bdf8;
-            --accent-secondary: #818cf8;
-            --accent-gradient: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
-            --accent-glow: rgba(56, 189, 248, 0.3);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --success: #34d399;
-            --danger: #f87171;
-            --user-bubble: linear-gradient(135deg, #2563eb, #7c3aed);
-            --bot-bubble: rgba(30, 41, 59, 0.8);
-            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 40px rgba(56, 189, 248, 0.1);
-            --radius-sm: 8px;
-            --radius-md: 16px;
-            --radius-lg: 24px;
-            --radius-xl: 32px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
         html, body {
             height: 100%;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-body);
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== ANIMATED BACKGROUND ===== */
-        body::before {
-            content: '';
+        /* ===== BACKGROUND AMBIENCE ===== */
+        .ambient-bg {
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background:
-                radial-gradient(ellipse at 20% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(129, 140, 248, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(192, 132, 252, 0.05) 0%, transparent 50%);
-            animation: bgFloat 20s ease-in-out infinite;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
             z-index: 0;
+            background:
+                radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
         }
 
-        @keyframes bgFloat {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(-2%, 2%) rotate(1deg); }
-            50% { transform: translate(1%, -1%) rotate(-0.5deg); }
-            75% { transform: translate(2%, 1%) rotate(0.5deg); }
-        }
-
-        /* ===== MAIN LAYOUT ===== */
-        .app-container {
+        /* ===== APP WRAPPER ===== */
+        .app-layout {
             position: relative;
             z-index: 1;
             display: flex;
-            flex-direction: column;
             height: 100vh;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 16px;
+            width: 100vw;
+            overflow: hidden;
         }
 
-        /* ===== HEADER ===== */
-        .header {
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-subtle);
             display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 20px 28px;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-lg);
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-glow);
-            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: var(--radius-md);
-            background: var(--accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #fff;
-            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25);
+            flex-direction: column;
+            padding: 24px 20px;
+            gap: 20px;
+            transition: var(--transition);
             flex-shrink: 0;
         }
 
-        .header-info h1 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.3;
-        }
-
-        .header-info p {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        .status-badge {
-            margin-left: auto;
+        .brand {
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            background: rgba(52, 211, 153, 0.1);
-            border: 1px solid rgba(52, 211, 153, 0.2);
-            border-radius: 999px;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: var(--medical-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+            position: relative;
+        }
+
+        .brand-icon .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            border: 2px solid var(--cyan-400);
+            animation: ringPulse 2.5s infinite;
+        }
+
+        @keyframes ringPulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .brand-text h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .brand-text span {
             font-size: 0.75rem;
-            color: var(--success);
-            font-weight: 500;
+            color: var(--cyan-400);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Stats Pill */
+        .system-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.78rem;
+        }
+
+        .system-pill .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--emerald-500);
+            font-weight: 600;
         }
 
         .status-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: var(--success);
-            animation: pulse 2s ease-in-out infinite;
+            background: var(--emerald-500);
+            box-shadow: 0 0 10px var(--emerald-500);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+        .system-pill .model-badge {
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
         }
 
-        /* ===== CHAT AREA ===== */
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 4px;
+        /* Sidebar Section */
+        .sidebar-section {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            scroll-behavior: smooth;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(56, 189, 248, 0.2) transparent;
+            gap: 10px;
+            flex: 1;
+            overflow-y: auto;
         }
 
-        .chat-container::-webkit-scrollbar {
-            width: 5px;
+        .sidebar-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-faint);
+            letter-spacing: 0.8px;
+            margin-top: 8px;
         }
 
-        .chat-container::-webkit-scrollbar-track {
+        .quick-topic-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
             background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            color: var(--text-body);
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: left;
+            transition: var(--transition);
+            font-family: inherit;
         }
 
-        .chat-container::-webkit-scrollbar-thumb {
-            background: rgba(56, 189, 248, 0.2);
-            border-radius: 999px;
+        .quick-topic-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-subtle);
+            color: var(--cyan-400);
+            transform: translateX(3px);
         }
 
-        /* ===== WELCOME MESSAGE ===== */
-        .welcome-card {
-            text-align: center;
-            padding: 48px 32px;
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+        .quick-topic-btn i {
+            font-size: 1rem;
+            width: 22px;
+            color: var(--cyan-400);
         }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(24px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Knowledge Base Info Box */
+        .kb-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .welcome-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 24px;
-            border-radius: var(--radius-lg);
-            background: var(--accent-gradient);
+        .kb-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--cyan-400);
+        }
+
+        .kb-card-text {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        /* Sidebar Footer / Clear */
+        .sidebar-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .btn-clear {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
-            box-shadow: 0 12px 40px rgba(56, 189, 248, 0.3);
-        }
-
-        .welcome-card h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .welcome-card p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.6;
-            max-width: 480px;
-            margin: 0 auto 32px;
-        }
-
-        .suggestion-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .suggestion-chip {
-            padding: 10px 18px;
-            background: var(--bg-glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
-            border-radius: 999px;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(244, 63, 94, 0.08);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            color: #fda4af;
+            border-radius: var(--radius-md);
             font-size: 0.82rem;
-            color: var(--text-secondary);
+            font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
         }
 
-        .suggestion-chip:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-            background: rgba(56, 189, 248, 0.08);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.15);
+        .btn-clear:hover {
+            background: rgba(244, 63, 94, 0.16);
+            border-color: var(--rose-500);
+            color: #fff;
         }
 
-        .suggestion-chip i {
-            margin-right: 6px;
+        /* ===== MAIN CHAT CONTENT AREA ===== */
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-surface);
+        }
+
+        /* Top Navbar */
+        .chat-navbar {
+            height: 70px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            z-index: 10;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-body);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .chat-title-group h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-title-group p {
             font-size: 0.75rem;
+            color: var(--text-muted);
         }
 
-        /* ===== MESSAGE BUBBLES ===== */
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .verified-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--cyan-400);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ===== MESSAGES CONTAINER ===== */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 999px;
+        }
+
+        /* ===== HERO WELCOME SCREEN ===== */
+        .welcome-hero {
+            max-width: 760px;
+            margin: auto;
+            text-align: center;
+            padding: 30px 20px;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-emblem {
+            width: 76px;
+            height: 76px;
+            border-radius: var(--radius-lg);
+            background: var(--medical-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            color: #fff;
+            margin: 0 auto 20px;
+            box-shadow: 0 12px 35px rgba(6, 182, 212, 0.35);
+        }
+
+        .welcome-hero h3 {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-hero p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.65;
+            max-width: 580px;
+            margin: 0 auto 28px;
+        }
+
+        /* Category Cards Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            text-align: left;
+        }
+
+        .category-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .category-card:hover {
+            border-color: var(--cyan-400);
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .category-card-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--cyan-400);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .category-card-content h4 {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin-bottom: 4px;
+        }
+
+        .category-card-content p {
+            font-size: 0.77rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* ===== MESSAGE ROWS ===== */
         .message-row {
             display: flex;
-            gap: 12px;
-            max-width: 82%;
-            animation: messageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 14px;
+            max-width: 860px;
+            width: 100%;
+            margin: 0 auto;
+            animation: messageAppear 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes messageIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .message-row.user {
-            align-self: flex-end;
-            flex-direction: row-reverse;
+            justify-content: flex-end;
         }
 
-        .message-row.bot {
-            align-self: flex-start;
-        }
-
-        .avatar {
-            width: 36px;
-            height: 36px;
+        .msg-avatar {
+            width: 38px;
+            height: 38px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
             flex-shrink: 0;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
-        .avatar.bot-avatar {
-            background: var(--accent-gradient);
+        .message-row.user .msg-avatar {
+            order: 2;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
         }
 
-        .avatar.user-avatar {
-            background: var(--user-bubble);
+        .message-row.bot .msg-avatar {
+            background: var(--medical-gradient);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
         }
 
-        .message-content {
-            padding: 14px 18px;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            line-height: 1.65;
+        .msg-body-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 80%;
+        }
+
+        .message-row.user .msg-body-wrapper {
+            align-items: flex-end;
+        }
+
+        .msg-bubble {
+            padding: 16px 20px;
+            border-radius: var(--radius-lg);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            position: relative;
             word-wrap: break-word;
         }
 
-        .message-row.user .message-content {
+        .message-row.user .msg-bubble {
             background: var(--user-bubble);
             color: #fff;
-            border-bottom-right-radius: 6px;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.25);
         }
 
-        .message-row.bot .message-content {
+        .message-row.bot .msg-bubble {
             background: var(--bot-bubble);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
-            color: var(--text-primary);
-            border-bottom-left-radius: 6px;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-body);
+            border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow-subtle);
         }
 
-        .message-content p {
-            margin-bottom: 10px;
+        /* Markdown Styling inside Bot Bubble */
+        .msg-bubble p {
+            margin-bottom: 12px;
         }
-
-        .message-content p:last-child {
+        .msg-bubble p:last-child {
             margin-bottom: 0;
         }
 
-        .message-content ul, .message-content ol {
-            margin: 8px 0 10px 22px;
+        .msg-bubble ul, .msg-bubble ol {
+            margin: 8px 0 14px 22px;
         }
 
-        .message-content li {
-            margin-bottom: 4px;
+        .msg-bubble li {
+            margin-bottom: 6px;
+            line-height: 1.6;
         }
 
-        .message-content strong {
-            color: #7dd3fc;
+        .msg-bubble strong {
+            color: #67e8f9;
             font-weight: 600;
         }
 
-        .message-content em {
-            color: #cbd5e1;
-            font-style: italic;
+        .msg-bubble h1, .msg-bubble h2, .msg-bubble h3, .msg-bubble h4 {
+            color: #f8fafc;
+            margin: 14px 0 8px;
+            font-weight: 700;
         }
 
-        .message-content code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2px 6px;
-            border-radius: 4px;
+        .msg-bubble code {
+            background: rgba(0, 0, 0, 0.35);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: monospace;
             font-size: 0.85em;
-            color: #38bdf8;
+            color: var(--cyan-400);
         }
 
-        /* ===== TYPING INDICATOR ===== */
-        .typing-indicator {
-            display: none;
-            align-self: flex-start;
-            gap: 12px;
-            max-width: 82%;
-            animation: messageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .typing-indicator.visible {
+        .msg-meta {
             display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.72rem;
+            color: var(--text-faint);
+            padding: 0 4px;
         }
 
-        .typing-dots {
-            padding: 16px 22px;
-            background: var(--bot-bubble);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            border-bottom-left-radius: 6px;
+        /* Action Buttons under Bot Response */
+        .msg-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 5px;
         }
 
-        .typing-dots span {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            animation: typingBounce 1.4s ease-in-out infinite;
+        .action-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--cyan-400);
+            border-color: var(--border-subtle);
         }
 
-        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
-
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-8px); opacity: 1; }
+        .action-icon-btn.active {
+            color: var(--emerald-500);
         }
 
-        /* ===== INPUT AREA ===== */
-        .input-container {
-            padding: 16px 0 8px;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+        /* ===== TYPING INDICATOR ===== */
+        .typing-row {
+            display: none;
+            gap: 14px;
+            max-width: 860px;
+            width: 100%;
+            margin: 0 auto;
+            animation: messageAppear 0.3s ease;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .typing-row.visible {
+            display: flex;
         }
 
-        .input-wrapper {
+        .typing-card {
+            background: var(--bot-bubble);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            border-bottom-left-radius: 4px;
+            padding: 14px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 8px 8px 8px 24px;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 999px;
-            box-shadow: var(--shadow-glow);
-            transition: var(--transition);
+            box-shadow: var(--shadow-subtle);
         }
 
-        .input-wrapper:focus-within {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1), var(--shadow-glow);
+        .wave-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .wave-dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--cyan-400);
+            animation: waveDot 1.4s infinite ease-in-out both;
+        }
+
+        .wave-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .wave-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .wave-dots span:nth-child(3) { animation-delay: 0; }
+
+        @keyframes waveDot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .typing-status-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== INPUT CONTAINER ===== */
+        .input-bar-container {
+            padding: 16px 28px 24px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 8px 12px 8px 20px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--cyan-400);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15), var(--shadow-subtle);
         }
 
         #user-input {
             flex: 1;
-            border: none;
             background: transparent;
+            border: none;
             outline: none;
+            color: var(--text-heading);
             font-size: 0.95rem;
-            color: var(--text-primary);
             font-family: inherit;
             padding: 8px 0;
         }
 
         #user-input::placeholder {
-            color: var(--text-muted);
+            color: var(--text-faint);
         }
 
-        #send-btn {
-            width: 48px;
-            height: 48px;
-            border: none;
+        .input-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mic-btn {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: var(--accent-gradient);
-            color: #fff;
-            font-size: 16px;
+            border: 1px solid var(--border-subtle);
+            background: transparent;
+            color: var(--text-muted);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 15px;
+            transition: var(--transition);
+        }
+
+        .mic-btn:hover {
+            color: var(--cyan-400);
+            border-color: var(--cyan-400);
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        .mic-btn.listening {
+            color: #fff;
+            background: var(--rose-500);
+            border-color: var(--rose-500);
+            animation: pulseRecord 1.5s infinite;
+        }
+
+        @keyframes pulseRecord {
+            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+        }
+
+        .send-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: var(--medical-gradient);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
             transition: var(--transition);
             flex-shrink: 0;
-            box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
         }
 
-        #send-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 6px 24px rgba(56, 189, 248, 0.4);
+        .send-btn:hover {
+            transform: scale(1.06);
+            box-shadow: 0 6px 22px rgba(6, 182, 212, 0.45);
         }
 
-        #send-btn:active {
-            transform: scale(0.95);
+        .send-btn:active {
+            transform: scale(0.96);
         }
 
-        #send-btn:disabled {
+        .send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
 
-        .disclaimer {
+        .disclaimer-text {
             text-align: center;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-top: 10px;
-            padding: 0 16px;
+            font-size: 0.72rem;
+            color: var(--text-faint);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-        .disclaimer i {
-            margin-right: 4px;
+        .disclaimer-text i {
+            color: var(--amber-500);
         }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 640px) {
-            .app-container {
-                padding: 8px;
+        /* ===== RESPONSIVE BREAKPOINTS ===== */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: fixed;
+                left: -320px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
             }
 
-            .header {
-                padding: 14px 18px;
-                gap: 12px;
+            .sidebar.open {
+                left: 0;
             }
 
-            .header-icon {
-                width: 42px;
-                height: 42px;
-                font-size: 20px;
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
-            .header-info h1 {
-                font-size: 1.1rem;
+            .category-grid {
+                grid-template-columns: 1fr;
             }
 
-            .status-badge span:last-child {
-                display: none;
+            .messages-container {
+                padding: 16px;
             }
 
-            .welcome-card {
-                padding: 32px 16px;
-            }
-
-            .welcome-icon {
-                width: 64px;
-                height: 64px;
-                font-size: 28px;
-            }
-
-            .message-row {
-                max-width: 90%;
-            }
-
-            .suggestion-chips {
-                gap: 8px;
-            }
-
-            .suggestion-chip {
-                font-size: 0.78rem;
-                padding: 8px 14px;
+            .input-bar-container {
+                padding: 12px 16px 16px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="header" id="app-header">
-            <div class="header-icon">
-                <i class="fa-solid fa-heart-pulse"></i>
-            </div>
-            <div class="header-info">
-                <h1>MedChat AI</h1>
-                <p>Powered by Google Gemini &amp; Medical Knowledge Base</p>
-            </div>
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                <span>Online</span>
-            </div>
-        </header>
+    <div class="ambient-bg"></div>
 
-        <!-- Chat Messages -->
-        <div class="chat-container" id="chat-container">
-            <!-- Welcome Card -->
-            <div class="welcome-card" id="welcome-card">
-                <div class="welcome-icon">
-                    <i class="fa-solid fa-robot"></i>
-                </div>
-                <h2>Hello! I'm your Medical AI Assistant</h2>
-                <p>
-                    Ask me any health-related question. I use a trusted medical
-                    textbook knowledge base to provide accurate answers.
-                    <strong>Always consult a doctor for professional advice.</strong>
-                </p>
-                <div class="suggestion-chips">
-                    <button class="suggestion-chip" onclick="sendSuggestion(this)">
-                        <i class="fa-solid fa-stethoscope"></i>What is diabetes?
-                    </button>
-                    <button class="suggestion-chip" onclick="sendSuggestion(this)">
-                        <i class="fa-solid fa-pills"></i>Symptoms of hypertension
-                    </button>
-                    <button class="suggestion-chip" onclick="sendSuggestion(this)">
-                        <i class="fa-solid fa-lungs"></i>How does asthma work?
-                    </button>
-                    <button class="suggestion-chip" onclick="sendSuggestion(this)">
-                        <i class="fa-solid fa-brain"></i>What causes headaches?
-                    </button>
-                </div>
-            </div>
-
-            <!-- Typing Indicator -->
-            <div class="typing-indicator" id="typing-indicator">
-                <div class="avatar bot-avatar">
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
                     <i class="fa-solid fa-heart-pulse"></i>
+                    <div class="pulse-ring"></div>
                 </div>
-                <div class="typing-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div class="brand-text">
+                    <h1>MedChat AI</h1>
+                    <span>Clinical Assistant</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Input Area -->
-        <div class="input-container">
-            <div class="input-wrapper">
-                <input
-                    type="text"
-                    id="user-input"
-                    placeholder="Ask a medical question..."
-                    autocomplete="off"
-                />
-                <button id="send-btn" onclick="sendMessage()">
-                    <i class="fa-solid fa-paper-plane"></i>
+            <!-- System Status Indicator -->
+            <div class="system-pill">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Pinecone RAG Active</span>
+                </div>
+                <div class="model-badge">Gemini 3.5</div>
+            </div>
+
+            <!-- Quick Topics & Categories -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">Clinical Knowledge Base</div>
+                <button class="quick-topic-btn" onclick="askQuickQuestion('What is hypertension and what are its symptoms and complications?')">
+                    <i class="fa-solid fa-heart"></i>
+                    <span>Hypertension & Heart</span>
+                </button>
+                <button class="quick-topic-btn" onclick="askQuickQuestion('What causes diabetes mellitus and how is it managed?')">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span>Diabetes & Endocrine</span>
+                </button>
+                <button class="quick-topic-btn" onclick="askQuickQuestion('Explain asthma, its common triggers, and emergency precautions.')">
+                    <i class="fa-solid fa-lungs"></i>
+                    <span>Asthma & Respiratory</span>
+                </button>
+                <button class="quick-topic-btn" onclick="askQuickQuestion('What is an allergic reaction and how does the immune system react?')">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <span>Allergies & Immunity</span>
+                </button>
+                <button class="quick-topic-btn" onclick="askQuickQuestion('What are common causes of tension headaches and migraines?')">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Headaches & Neurological</span>
                 </button>
             </div>
-            <p class="disclaimer">
-                <i class="fa-solid fa-shield-halved"></i>
-                MedChat AI may produce inaccurate information. Always consult a healthcare professional.
-            </p>
-        </div>
+
+            <!-- Knowledge Base Summary Box -->
+            <div class="kb-card">
+                <div class="kb-card-header">
+                    <i class="fa-solid fa-book-medical"></i>
+                    <span>Verified Medical Source</span>
+                </div>
+                <div class="kb-card-text">
+                    Answers are strictly retrieved from <em>The Gale Encyclopedia of Medicine</em> (101,734 indexed clinical chunks).
+                </div>
+            </div>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <button class="btn-clear" onclick="clearConversation()">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset Conversation</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CHAT PANEL -->
+        <main class="main-chat">
+            <!-- Navbar Header -->
+            <header class="chat-navbar">
+                <div class="nav-left">
+                    <button class="mobile-toggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="chat-title-group">
+                        <h2>
+                            <span>MedChat Clinical AI</span>
+                            <i class="fa-solid fa-circle-check" style="color: var(--cyan-400); font-size: 0.88rem;"></i>
+                        </h2>
+                        <p>Real-time textbook retrieval &amp; clinical evidence synthesis</p>
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <div class="verified-badge">
+                        <i class="fa-solid fa-database"></i>
+                        <span>101k+ Vectors Active</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Messages Container -->
+            <div class="messages-container" id="messages-container">
+                <!-- Hero Welcome Screen -->
+                <div class="welcome-hero" id="welcome-hero">
+                    <div class="hero-emblem">
+                        <i class="fa-solid fa-staff-snake"></i>
+                    </div>
+                    <h3>Hello, I am your Medical AI Assistant</h3>
+                    <p>
+                        I analyze authoritative medical reference books to provide accurate, evidence-grounded health information. Select a clinical topic below or type your question.
+                    </p>
+
+                    <div class="category-grid">
+                        <div class="category-card" onclick="askQuickQuestion('What is hypertension and what are its symptoms and complications?')">
+                            <div class="category-card-icon">
+                                <i class="fa-solid fa-heart-pulse"></i>
+                            </div>
+                            <div class="category-card-content">
+                                <h4>Cardiovascular Health</h4>
+                                <p>Hypertension, blood pressure, heart health &amp; risk factors</p>
+                            </div>
+                        </div>
+
+                        <div class="category-card" onclick="askQuickQuestion('What causes diabetes mellitus and how is it managed?')">
+                            <div class="category-card-icon">
+                                <i class="fa-solid fa-vial"></i>
+                            </div>
+                            <div class="category-card-content">
+                                <h4>Diabetes &amp; Metabolism</h4>
+                                <p>Insulin, glucose levels, Type 1 &amp; Type 2 management</p>
+                            </div>
+                        </div>
+
+                        <div class="category-card" onclick="askQuickQuestion('Explain asthma, its common triggers, and emergency precautions.')">
+                            <div class="category-card-icon">
+                                <i class="fa-solid fa-lungs"></i>
+                            </div>
+                            <div class="category-card-content">
+                                <h4>Respiratory Conditions</h4>
+                                <p>Asthma triggers, wheezing, bronchitis &amp; airway health</p>
+                            </div>
+                        </div>
+
+                        <div class="category-card" onclick="askQuickQuestion('What is an allergic reaction and how does the immune system react?')">
+                            <div class="category-card-icon">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="category-card-content">
+                                <h4>Allergies &amp; Immunology</h4>
+                                <p>Antibodies, histamine response, environmental allergies</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing / Retrieving Indicator -->
+                <div class="typing-row" id="typing-row">
+                    <div class="msg-avatar" style="background: var(--medical-gradient); color: #fff;">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div class="typing-card">
+                        <div class="wave-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="typing-status-text">Searching Gale Encyclopedia &amp; generating verified clinical response...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar Container -->
+            <div class="input-bar-container">
+                <div class="input-box">
+                    <input 
+                        type="text" 
+                        id="user-input" 
+                        placeholder="Ask any health question (e.g., symptoms, conditions, causes)..." 
+                        autocomplete="off"
+                    />
+                    <div class="input-tools">
+                        <button class="mic-btn" id="mic-btn" onclick="toggleVoiceInput()" title="Voice Dictation">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                        <button class="send-btn" id="send-btn" onclick="handleSend()" title="Send Question">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="disclaimer-text">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Educational medical reference tool. Always consult a licensed physician for diagnosis and medical treatment.</span>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <!-- CLIENT LOGIC -->
     <script>
-        const chatContainer = document.getElementById("chat-container");
+        const messagesContainer = document.getElementById("messages-container");
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
-        const typingIndicator = document.getElementById("typing-indicator");
-        const welcomeCard = document.getElementById("welcome-card");
+        const micBtn = document.getElementById("mic-btn");
+        const typingRow = document.getElementById("typing-row");
+        const welcomeHero = document.getElementById("welcome-hero");
+        const sidebar = document.getElementById("sidebar");
 
-        // Send message on Enter key
-        userInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        // Format current timestamp
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Toggle mobile sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle("open");
+        }
+
+        // Close sidebar on click outside in mobile
+        document.addEventListener("click", function(e) {
+            if (window.innerWidth <= 900) {
+                if (!sidebar.contains(e.target) && !e.target.closest(".mobile-toggle") && sidebar.classList.contains("open")) {
+                    sidebar.classList.remove("open");
+                }
             }
         });
 
-        // Send a suggestion chip
-        function sendSuggestion(chip) {
-            // Extract text without the icon
-            const text = chip.textContent.trim();
-            userInput.value = text;
-            sendMessage();
+        // Listen for Enter key
+        userInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+
+        // Quick topic trigger
+        function askQuickQuestion(queryText) {
+            userInput.value = queryText;
+            if (window.innerWidth <= 900) {
+                sidebar.classList.remove("open");
+            }
+            handleSend();
         }
 
-        // Append a message bubble
+        // Reset conversation
+        function clearConversation() {
+            // Remove all message rows except welcome and typing
+            const messages = messagesContainer.querySelectorAll(".message-row");
+            messages.forEach(msg => msg.remove());
+            if (welcomeHero) {
+                welcomeHero.style.display = "block";
+            }
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            if (window.innerWidth <= 900) {
+                sidebar.classList.remove("open");
+            }
+        }
+
+        // Append message to chat
         function appendMessage(text, sender) {
-            // Hide welcome card on first message
-            if (welcomeCard) {
-                welcomeCard.style.display = "none";
+            if (welcomeHero) {
+                welcomeHero.style.display = "none";
             }
 
             const row = document.createElement("div");
             row.classList.add("message-row", sender);
 
             const avatar = document.createElement("div");
-            avatar.classList.add("avatar", sender === "bot" ? "bot-avatar" : "user-avatar");
+            avatar.classList.add("msg-avatar");
+            avatar.innerHTML = sender === "user" 
+                ? '<i class="fa-solid fa-user"></i>' 
+                : '<i class="fa-solid fa-heart-pulse"></i>';
 
-            const icon = document.createElement("i");
-            if (sender === "bot") {
-                icon.className = "fa-solid fa-heart-pulse";
-            } else {
-                icon.className = "fa-solid fa-user";
-            }
-            avatar.appendChild(icon);
+            const bodyWrapper = document.createElement("div");
+            bodyWrapper.classList.add("msg-body-wrapper");
 
-            const content = document.createElement("div");
-            content.classList.add("message-content");
+            const bubble = document.createElement("div");
+            bubble.classList.add("msg-bubble");
+
             if (sender === "bot" && typeof marked !== "undefined") {
-                content.innerHTML = marked.parse(text);
+                bubble.innerHTML = marked.parse(text);
             } else {
-                content.textContent = text;
+                bubble.textContent = text;
             }
+
+            const meta = document.createElement("div");
+            meta.classList.add("msg-meta");
+            meta.innerHTML = `<span>${sender === "user" ? "You" : "MedChat AI"}</span> • <span>${getCurrentTime()}</span>`;
+
+            bodyWrapper.appendChild(bubble);
+
+            // Add action buttons for bot messages (Copy & Read Aloud)
+            if (sender === "bot") {
+                const actions = document.createElement("div");
+                actions.classList.add("msg-actions");
+
+                // Copy button
+                const copyBtn = document.createElement("button");
+                copyBtn.classList.add("action-icon-btn");
+                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(text).then(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i><span>Copied!</span>';
+                        copyBtn.classList.add("active");
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+                            copyBtn.classList.remove("active");
+                        }, 2000);
+                    });
+                };
+
+                // Read aloud button (Text to Speech)
+                const speakBtn = document.createElement("button");
+                speakBtn.classList.add("action-icon-btn");
+                speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i><span>Read Aloud</span>';
+                let isSpeaking = false;
+                speakBtn.onclick = function() {
+                    if (!('speechSynthesis' in window)) {
+                        alert("Text-to-speech is not supported by your browser.");
+                        return;
+                    }
+
+                    if (isSpeaking) {
+                        window.speechSynthesis.cancel();
+                        isSpeaking = false;
+                        speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i><span>Read Aloud</span>';
+                        speakBtn.classList.remove("active");
+                    } else {
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ''));
+                        utterance.rate = 1.0;
+                        utterance.onend = function() {
+                            isSpeaking = false;
+                            speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i><span>Read Aloud</span>';
+                            speakBtn.classList.remove("active");
+                        };
+                        window.speechSynthesis.speak(utterance);
+                        isSpeaking = true;
+                        speakBtn.innerHTML = '<i class="fa-solid fa-stop"></i><span>Stop</span>';
+                        speakBtn.classList.add("active");
+                    }
+                };
+
+                actions.appendChild(copyBtn);
+                actions.appendChild(speakBtn);
+                bodyWrapper.appendChild(actions);
+            }
+
+            bodyWrapper.appendChild(meta);
 
             row.appendChild(avatar);
-            row.appendChild(content);
+            row.appendChild(bodyWrapper);
 
-            // Insert before typing indicator
-            chatContainer.insertBefore(row, typingIndicator);
+            // Insert before typing row
+            messagesContainer.insertBefore(row, typingRow);
             scrollToBottom();
         }
 
-        // Show/hide typing indicator
         function showTyping() {
-            typingIndicator.classList.add("visible");
+            typingRow.classList.add("visible");
             scrollToBottom();
         }
 
         function hideTyping() {
-            typingIndicator.classList.remove("visible");
+            typingRow.classList.remove("visible");
         }
 
-        // Scroll chat to bottom
         function scrollToBottom() {
             requestAnimationFrame(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
             });
         }
 
-        // Send message to backend
-        function sendMessage() {
-            const msg = userInput.value.trim();
-            if (!msg) return;
+        // Voice Input (Speech-to-Text)
+        let recognition = null;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const speechText = event.results[0][0].transcript;
+                userInput.value = speechText;
+                stopVoiceInput();
+                handleSend();
+            };
+
+            recognition.onerror = function() {
+                stopVoiceInput();
+            };
+
+            recognition.onend = function() {
+                stopVoiceInput();
+            };
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                alert("Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.");
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                stopVoiceInput();
+            } else {
+                try {
+                    recognition.start();
+                    isListening = true;
+                    micBtn.classList.add("listening");
+                    userInput.placeholder = "Listening... Speak your symptoms or question...";
+                } catch(e) {
+                    stopVoiceInput();
+                }
+            }
+        }
+
+        function stopVoiceInput() {
+            isListening = false;
+            micBtn.classList.remove("listening");
+            userInput.placeholder = "Ask any health question (e.g., symptoms, conditions, causes)...";
+        }
+
+        // Send query to Flask backend
+        function handleSend() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            // Stop speech if listening
+            if (isListening && recognition) {
+                recognition.stop();
+                stopVoiceInput();
+            }
 
             // Disable input while processing
             userInput.value = "";
-            sendBtn.disabled = true;
             userInput.disabled = true;
+            sendBtn.disabled = true;
 
-            // Show user message
-            appendMessage(msg, "user");
-
-            // Show typing indicator
+            appendMessage(query, "user");
             showTyping();
 
-            // Send to Flask backend
             const formData = new FormData();
-            formData.append("msg", msg);
+            formData.append("msg", query);
 
             fetch("/get", {
                 method: "POST",
-                body: formData,
+                body: formData
             })
-                .then((response) => response.text())
-                .then((data) => {
-                    hideTyping();
-                    appendMessage(data, "bot");
-                })
-                .catch((error) => {
-                    hideTyping();
-                    appendMessage(
-                        "Sorry, something went wrong. Please try again.",
-                        "bot"
-                    );
-                    console.error("Error:", error);
-                })
-                .finally(() => {
-                    sendBtn.disabled = false;
-                    userInput.disabled = false;
-                    userInput.focus();
-                });
+            .then(res => res.text())
+            .then(data => {
+                hideTyping();
+                appendMessage(data, "bot");
+            })
+            .catch(err => {
+                hideTyping();
+                appendMessage("I encountered a connection issue while communicating with the medical database. Please verify your connection and try again.", "bot");
+                console.error("Chat error:", err);
+            })
+            .finally(() => {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            });
         }
     </script>
 </body>
