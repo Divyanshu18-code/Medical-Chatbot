@@ -60,16 +60,11 @@ retriever = docsearch.as_retriever(
 )
 
 # Initialize Google Gemini LLM
-# Note: gemini-3.5-flash is the active, high-speed model
-# max_output_tokens=4096 and thinking_budget=0 ensure all tokens are dedicated
-# to the final medical answer, preventing truncation on long clinical case questions.
-llm = ChatGoogleGenerativeAI(
-    model="gemini-3.5-flash",
-    google_api_key=GOOGLE_API_KEY,
-    temperature=0.3,
-    max_output_tokens=4096,
-    thinking_budget=0,
-)
+# Note: gemini-3.5-flash-lite provides generous daily quotas (1,500 RPD on free tier)
+# compared to preview models (capped at 20 RPD).
+# max_output_tokens=4096 ensures complete answers on long clinical cases.
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
+FALLBACK_MODEL = "gemini-3.1-flash-lite"
 
 # Build the RAG prompt
 prompt = ChatPromptTemplate.from_messages([
@@ -77,10 +72,35 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
 ])
 
-# Create the RAG chain
-question_answer_chain = create_stuff_documents_chain(llm, prompt)
-rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-logger.info("Medical RAG Chain initialized successfully.")
+
+def build_rag_chain(model_name):
+    llm = ChatGoogleGenerativeAI(
+        model=model_name,
+        google_api_key=GOOGLE_API_KEY,
+        temperature=0.3,
+        max_output_tokens=4096,
+    )
+    qa_chain = create_stuff_documents_chain(llm, prompt)
+    return create_retrieval_chain(retriever, qa_chain)
+
+
+rag_chain = build_rag_chain(DEFAULT_MODEL)
+logger.info(f"Medical RAG Chain initialized with model '{DEFAULT_MODEL}'.")
+
+
+def extract_answer_text(raw_answer):
+    """Cleanly extract string from AIMessage, TextAccessor, list of dicts, or raw string."""
+    if hasattr(raw_answer, "content"):
+        raw_answer = raw_answer.content
+    if hasattr(raw_answer, "text"):
+        return raw_answer.text
+    if isinstance(raw_answer, list):
+        parts = [
+            item.get("text", str(item)) if isinstance(item, dict) else str(item)
+            for item in raw_answer
+        ]
+        return "".join(parts)
+    return str(raw_answer)
 
 
 @app.route("/")
@@ -96,7 +116,8 @@ def health():
         "service": "medical-chatbot",
         "version": "1.0.0",
         "index": INDEX_NAME,
-        "model": "gemini-3.5-flash"
+        "model": DEFAULT_MODEL,
+        "fallback_model": FALLBACK_MODEL
     }), 200
 
 
@@ -117,20 +138,19 @@ def chat():
     logger.info(f"User Query: {msg[:80]}...")
 
     try:
-        result = rag_chain.invoke({"input": msg})
-        raw_answer = result.get("answer", "")
+        try:
+            result = rag_chain.invoke({"input": msg})
+        except Exception as primary_err:
+            err_str = str(primary_err)
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                logger.warning(f"Primary model '{DEFAULT_MODEL}' reached quota. Attempting fallback to '{FALLBACK_MODEL}'...")
+                fallback_chain = build_rag_chain(FALLBACK_MODEL)
+                result = fallback_chain.invoke({"input": msg})
+            else:
+                raise primary_err
 
-        # Extract string cleanly across LangChain versions (TextAccessor, list of dicts, or str)
-        if hasattr(raw_answer, "text"):
-            answer = raw_answer.text
-        elif isinstance(raw_answer, list):
-            parts = [
-                item.get("text", str(item)) if isinstance(item, dict) else str(item)
-                for item in raw_answer
-            ]
-            answer = "".join(parts)
-        else:
-            answer = str(raw_answer)
+        raw_answer = result.get("answer", "")
+        answer = extract_answer_text(raw_answer)
 
         logger.info(f"Answer generated ({len(answer)} chars)")
         return answer
@@ -138,7 +158,7 @@ def chat():
         logger.error(f"Error processing request: {e}", exc_info=True)
         err_str = str(e)
         if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-            return "Google Gemini API rate limit or daily quota reached. Please wait a moment or try again later.", 429
+            return "Google Gemini API daily quota reached across all models. Please wait for the daily quota to reset or create a fresh free key at https://aistudio.google.com/app/apikey.", 429
         return "I'm sorry, I encountered an error processing your request. Please try again.", 500
 
 
