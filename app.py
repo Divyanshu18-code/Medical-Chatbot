@@ -61,11 +61,14 @@ retriever = docsearch.as_retriever(
 
 # Initialize Google Gemini LLM
 # Note: gemini-3.5-flash is the active, high-speed model
+# max_output_tokens=4096 and thinking_budget=0 ensure all tokens are dedicated
+# to the final medical answer, preventing truncation on long clinical case questions.
 llm = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash",
     google_api_key=GOOGLE_API_KEY,
-    temperature=0.4,
-    max_output_tokens=1024,
+    temperature=0.3,
+    max_output_tokens=4096,
+    thinking_budget=0,
 )
 
 # Build the RAG prompt
@@ -133,6 +136,9 @@ def chat():
         return answer
     except Exception as e:
         logger.error(f"Error processing request: {e}", exc_info=True)
+        err_str = str(e)
+        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+            return "Google Gemini API rate limit or daily quota reached. Please wait a moment or try again later.", 429
         return "I'm sorry, I encountered an error processing your request. Please try again.", 500
 
 
